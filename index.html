@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apriori Algorithm in Healthcare</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Apriori Algorithm in Healthcare</h1>
+    </header>
+    <main>
+        <section>
+            <h2>Introduction</h2>
+            <p>The Apriori algorithm is used in data mining for learning association rules. In healthcare, it can be used to uncover relationships between different medical conditions, treatments, and medications.</p>
+        </section>
+        <section>
+            <h2>Enter Healthcare Data</h2>
+            <textarea id="dataInput" rows="10" cols="50" placeholder="Enter healthcare transactions here, one transaction per line, items separated by commas (e.g., 'medication1, conditionA, treatmentX')"></textarea>
+            <button onclick="processData()">Process Data</button>
+        </section>
+        <section>
+            <h2>Run Apriori Algorithm</h2>
+            <label for="minSupport">Min Support:</label>
+            <input type="number" id="minSupport" value="0.5" step="0.01" min="0" max="1">
+            <label for="minConfidence">Min Confidence:</label>
+            <input type="number" id="minConfidence" value="0.7" step="0.01" min="0" max="1">
+            <button onclick="runApriori()">Run Algorithm</button>
+        </section>
+        <section id="results">
+            <h2>Results</h2>
+            <!-- Results will be displayed here -->
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

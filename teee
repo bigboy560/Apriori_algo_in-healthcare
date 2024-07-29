@@ -1,0 +1,104 @@
+let transactions = [];
+
+function processData() {
+    const dataInput = document.getElementById('dataInput').value;
+    transactions = parseCSV(dataInput);
+    console.log(transactions);
+}
+
+function parseCSV(data) {
+    const lines = data.split('\n');
+    const result = lines.map(line => line.trim().split(',').map(item => item.trim()));
+    return result;
+}
+
+function runApriori() {
+    const minSupport = parseFloat(document.getElementById('minSupport').value);
+    const minConfidence = parseFloat(document.getElementById('minConfidence').value);
+
+    const { frequentItemsets, associationRules } = apriori(transactions, minSupport, minConfidence);
+
+    const resultsSection = document.getElementById('results');
+    resultsSection.innerHTML = `<h3>Frequent Itemsets:</h3>${formatFrequentItemsets(frequentItemsets)}
+                                <h3>Association Rules:</h3>${formatAssociationRules(associationRules)}
+                                <h3>Conclusion:</h3>${generateConclusion(frequentItemsets, associationRules)}`;
+}
+
+function apriori(transactions, minSupport, minConfidence) {
+    const itemsetCounts = {};
+    const numTransactions = transactions.length;
+
+    // Count individual items
+    transactions.forEach(transaction => {
+        transaction.forEach(item => {
+            if (!itemsetCounts[item]) itemsetCounts[item] = 0;
+            itemsetCounts[item]++;
+        });
+    });
+
+    // Filter out itemsets below min support
+    const frequentItemsets = [];
+    for (let itemset in itemsetCounts) {
+        if (itemsetCounts[itemset] / numTransactions >= minSupport) {
+            frequentItemsets.push([itemset]);
+        }
+    }
+
+    // Generate association rules
+    const associationRules = [];
+    frequentItemsets.forEach(itemset => {
+        const antecedent = itemset;
+        const consequent = transactions.flat().filter(item => !itemset.includes(item));
+        consequent.forEach(item => {
+            const rule = {
+                antecedent: itemset,
+                consequent: [item],
+                confidence: computeConfidence(antecedent, [item], transactions)
+            };
+            if (rule.confidence >= minConfidence) {
+                associationRules.push(rule);
+            }
+        });
+    });
+
+    return { frequentItemsets, associationRules };
+}
+
+function computeConfidence(antecedent, consequent, transactions) {
+    const antecedentCount = transactions.filter(transaction => antecedent.every(item => transaction.includes(item))).length;
+    const bothCount = transactions.filter(transaction => antecedent.every(item => transaction.includes(item)) && consequent.every(item => transaction.includes(item))).length;
+    return bothCount / antecedentCount;
+}
+
+function formatFrequentItemsets(frequentItemsets) {
+    return `<ul>${frequentItemsets.map(itemset => `<li>${itemset.join(', ')}</li>`).join('')}</ul>`;
+}
+
+function formatAssociationRules(associationRules) {
+    return `<ul>${associationRules.map(rule => `<li>${rule.antecedent.join(', ')} => ${rule.consequent.join(', ')} (Confidence: ${rule.confidence.toFixed(2)})</li>`).join('')}</ul>`;
+}
+
+function generateConclusion(frequentItemsets, associationRules) {
+    let conclusion = '';
+    if (frequentItemsets.length === 0 && associationRules.length === 0) {
+        conclusion = '<p>No frequent itemsets or association rules were found. Consider adjusting the support and confidence thresholds.</p>';
+    } else {
+        conclusion = '<p>The analysis identified the following frequent itemsets and association rules:</p>';
+        const uniqueRules = new Set();
+
+        associationRules.forEach(rule => {
+            const antecedent = rule.antecedent.join(', ');
+            const consequent = rule.consequent.join(', ');
+            const confidence = rule.confidence.toFixed(2);
+            const ruleText = `${antecedent} is frequently associated with ${consequent}, with a confidence of ${confidence}.`;
+            
+            if (!uniqueRules.has(ruleText)) {
+                uniqueRules.add(ruleText);
+                conclusion += `<p>${ruleText}</p>`;
+            }
+        });
+
+        conclusion += '<p>These insights help to understand the common treatment patterns and their relationships, which can be valuable for optimizing patient care and treatment planning.</p>';
+    }
+    return conclusion;
+}
